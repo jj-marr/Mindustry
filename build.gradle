@@ -28,6 +28,42 @@ buildscript{
 plugins{
     id "org.jetbrains.kotlin.jvm" version "2.1.10"
     id "org.jetbrains.kotlin.kapt" version "2.1.10"
+    id 'info.solidsoft.pitest' version '1.15.0'
+}
+
+pitest {
+    targetClasses = ['mindustry.game.*']
+    threads = 4
+    outputFormats = ['HTML', 'XML']
+    timestampedReports = false
+    mutationThreshold = 70
+    coverageThreshold = 80
+    junit5PluginVersion = '1.0.0'
+    verbose = true
+    targetTests = ['*Tests']
+
+    // Add PIT JUnit 5 plugin
+    dependencies {
+        pitest 'org.pitest:pitest-junit5-plugin:1.0.0'
+    }
+}
+
+dependencies {
+    pitest 'org.pitest:pitest-junit5-plugin:1.0.0'
+}
+
+// Root level task to run Pitest from an ephemeral nix-shell
+task runPitest(type: Exec) {
+    description = 'Runs PIT mutation testing in an ephemeral nix-shell'
+    group = 'Verification'
+
+    // Create directory for reports
+    doFirst {
+        mkdir("${buildDir}/reports/pitest")
+    }
+
+    workingDir = projectDir
+    commandLine 'nix-shell', '--pure', './shell.nix', '--run', 'gradle pitest'
 }
 
 allprojects{

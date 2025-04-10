@@ -1,1 +1,61 @@
 sourceSets.test.resources.srcDirs = ["src/test/resources"]
+
+apply plugin: 'info.solidsoft.pitest'
+
+dependencies {
+    testImplementation project(":core")
+    testImplementation "org.junit.jupiter:junit-jupiter-params:5.7.1"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.7.1"
+    testImplementation arcModule("backends:backend-headless")
+    testImplementation "org.json:json:20230618"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.7.1"
+
+    // Add Pitest JUnit 5 plugin
+    pitest 'org.pitest:pitest-junit5-plugin:1.0.0'
+}
+
+test {
+    //fork every test so mods don't interact with each other
+    forkEvery = 1
+    useJUnitPlatform()
+    workingDir = new File("../core/assets")
+    testLogging {
+        exceptionFormat = 'full'
+        showStandardStreams = true
+    }
+}
+
+pitest {
+    targetClasses = ['mindustry.game.MapMarkers']
+    pitestVersion = '1.15.0'
+    threads = 4
+    outputFormats = ['HTML', 'XML']
+    timestampedReports = false
+    mutationThreshold = 0
+    coverageThreshold = 0
+    junit5PluginVersion = '1.0.0'
+    verbose = true
+    targetTests = ['MapMarkerTests']
+    reportDir = file("${project.buildDir}/reports/pitest")
+    failWhenNoMutations = false
+    skipFailingTests = true
+
+    mainSourceSets = [project(':core').sourceSets.main]
+    testSourceSets = [sourceSets.test]
+}
+
+// Make sure core classes are available for testing
+tasks.withType(info.solidsoft.gradle.pitest.PitestTask) {
+    dependsOn(':core:compileJava')
+    dependsOn(':core:jar')
+    mustRunAfter test
+}
+
+// Script to run pitest
+task runPitest(type: Exec) {
+    description = 'Runs PIT mutation testing in an ephemeral nix-shell'
+    group = 'Verification'
+
+    workingDir = projectDir
+    commandLine 'bash', "${projectDir}/run-pitest.sh"
+}
