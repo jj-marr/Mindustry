@@ -37,8 +37,30 @@ pitest {
     verbose = true
     targetTests = ['MapMarkerTests']
     reportDir = file("${project.buildDir}/reports/pitest")
-    failWhenNoMutations = false
     skipFailingTests = true
+
+    // Add additional mutators for more comprehensive testing
+    mutators = [
+        // Standard mutators
+        'CONDITIONALS_BOUNDARY',      // e.g. > changed to >=
+        'INCREMENTS',                 // e.g. i++ changed to i--
+        'INVERT_NEGS',                // e.g. -i changed to i
+        'MATH',                       // e.g. + changed to -
+        'NEGATE_CONDITIONALS',        // e.g. == changed to !=
+        'VOID_METHOD_CALLS',          // Removes method calls to void methods
+        'EMPTY_RETURNS',              // e.g. return 0; -> return 0;
+        'FALSE_RETURNS',              // e.g. return true; -> return false;
+        'TRUE_RETURNS',               // e.g. return false; -> return true;
+        'NULL_RETURNS',               // e.g. return x; -> return null;
+
+        // Collection-specific mutators (relevant for IntMap and Seq usage)
+        'REMOVE_CONDITIONALS',         // Removes conditional statements
+        'EXPERIMENTAL_MEMBER_VARIABLE',// Mutates member variables
+        'EXPERIMENTAL_SWITCH',         // Mutates switch statements
+        'CONSTRUCTOR_CALLS',           // Mutates constructor calls
+        'NON_VOID_METHOD_CALLS',       // Mutates return values from non-void methods
+        'INLINE_CONSTS',               // Mutates inline constants
+    ]
 
     mainSourceSets = [project(':core').sourceSets.main]
     testSourceSets = [sourceSets.test]
