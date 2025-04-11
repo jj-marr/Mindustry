@@ -35,7 +35,7 @@ pitest {
     coverageThreshold = 0
     junit5PluginVersion = '1.0.0'
     verbose = true
-    targetTests = ['MapMarkerTests']
+    targetTests = ['*']
     reportDir = file("${project.buildDir}/reports/pitest")
     skipFailingTests = true
 
